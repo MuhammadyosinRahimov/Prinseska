@@ -16,7 +16,6 @@ export function formatBytes(bytes: number | null | undefined, decimals = 2): str
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
-
 export function formatDate(date: string | Date | null | undefined, locale = 'ru-RU'): string {
   if (!date) return '—';
   try {
@@ -31,7 +30,6 @@ export function formatDate(date: string | Date | null | undefined, locale = 'ru-
     return '—';
   }
 }
-
 export function formatDateTime(date: string | Date | null | undefined, locale = 'ru-RU'): string {
   if (!date) return '—';
   try {
