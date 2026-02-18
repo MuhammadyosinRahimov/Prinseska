@@ -1,7 +1,7 @@
 export const config = {
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL ||"https://sciencehub-backend-ymqy.onrender.com/",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  siteName: process.env.NEXT_PUBLIC_SITE_NAME || 'Prinseska 💘',
+  siteName: process.env.NEXT_PUBLIC_SITE_NAME || 'since hub ',
 
   // Token settings
   accessTokenKey: 'sciencehub_access_token',
