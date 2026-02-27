@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata: Metadata = {
   title: {
-    default: 'Prinseska 💘 ',
-    template: '%s | Prinseska 💘',
+    default: 'Donishyob ',
+    template: '%s | Donishyob',
   },
   description: 'Научная библиотека с широким выбором учебных материалов для студентов, преподавателей и исследователей.',
 };

@@ -1,101 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import {
   BookOpenIcon,
-  FunnelIcon,
-  XMarkIcon,
   ArrowDownTrayIcon,
   DocumentTextIcon,
-  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { Container } from '@/components/layout/Container';
 import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
 import { Pagination } from '@/components/ui/Pagination';
+import { SmartBookSearch } from '@/components/books/SmartBookSearch';
 import { useBooks } from '@/hooks/useBooks';
 import { useCategories } from '@/hooks/useCategories';
 import { useAudiences } from '@/hooks/useAudiences';
-import { BookFilters, BookDifficulty } from '@/types';
+import { BookFilters } from '@/types';
 import { routes, config } from '@/config';
 import { formatBytes } from '@/lib/utils';
-
-const difficultyOptions = [
-  { value: '', label: 'Все уровни' },
-  { value: 'Beginner', label: 'Начинающий' },
-  { value: 'Intermediate', label: 'Средний' },
-  { value: 'Advanced', label: 'Продвинутый' },
-];
-
-const sortOptions = [
-  { value: 'createdAt-desc', label: 'Новые' },
-  { value: 'createdAt-asc', label: 'Старые' },
-  { value: 'title-asc', label: 'По названию (А-Я)' },
-  { value: 'title-desc', label: 'По названию (Я-А)' },
-  { value: 'downloadCount-desc', label: 'Популярные' },
-];
 
 export default function BooksPage() {
   const [filters, setFilters] = useState<BookFilters>({
     page: 1,
     pageSize: 12,
   });
-  const [showFilters, setShowFilters] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
 
   const { data, isLoading } = useBooks(filters);
   const { data: categories } = useCategories();
   const { data: audiences } = useAudiences();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFilters((prev) => ({ ...prev, search: searchValue, page: 1 }));
-  };
-
-  const handleFilterChange = (key: keyof BookFilters, value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value || undefined,
-      page: 1,
-    }));
-  };
-
-  const handleSortChange = (value: string) => {
-    const [sortBy, sortOrder] = value.split('-');
-    setFilters((prev) => ({
-      ...prev,
-      sortBy,
-      sortOrder: sortOrder as 'asc' | 'desc',
-      page: 1,
-    }));
-  };
+  const handleFiltersChange = useCallback((newFilters: BookFilters) => {
+    setFilters(newFilters);
+  }, []);
 
   const handlePageChange = (page: number) => {
     setFilters((prev) => ({ ...prev, page }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({ page: 1, pageSize: 12 });
-    setSearchValue('');
-  };
+  }, []);
 
   const hasActiveFilters =
     filters.search ||
     filters.categoryId ||
     filters.audienceId ||
-    filters.difficulty;
-
-  const categoryOptions = [
-    { value: '', label: 'Все категории' },
-    ...(Array.isArray(categories) ? categories.map((c) => ({ value: c.id, label: c.name })) : []),
-  ];
-
-  const audienceOptions = [
-    { value: '', label: 'Все аудитории' },
-    ...(Array.isArray(audiences) ? audiences.map((a) => ({ value: a.id, label: a.name })) : []),
-  ];
+    filters.difficulty ||
+    filters.language;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -115,95 +66,21 @@ export default function BooksPage() {
             <p className="text-xl text-white/70 mb-8">
               Найдите нужную книгу среди тысяч научных материалов
             </p>
-
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="relative max-w-2xl">
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder="Поиск по названию или автору..."
-                  className="w-full pl-14 pr-32 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-cyan-600 transition-all"
-                >
-                  Найти
-                </button>
-              </div>
-            </form>
           </div>
         </Container>
       </div>
 
       <Container className="py-8">
-        {/* Filters Bar */}
+        {/* Smart Search */}
         <div className="mb-8">
-          <div className="flex flex-wrap items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 ${showFilters ? 'bg-purple-50 border-purple-300 text-purple-700' : ''}`}
-            >
-              <FunnelIcon className="h-5 w-5" />
-              Фильтры
-              {hasActiveFilters && (
-                <span className="w-2 h-2 rounded-full bg-purple-500" />
-              )}
-            </Button>
-
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition-colors"
-              >
-                <XMarkIcon className="h-4 w-4" />
-                Сбросить фильтры
-              </button>
-            )}
-
-            <div className="ml-auto">
-              <span className="text-sm text-gray-500">
-                Найдено: <span className="font-semibold text-gray-900">{data?.totalCount || 0}</span> книг
-              </span>
-            </div>
-          </div>
-
-          {showFilters && (
-            <div className="mt-4 p-6 bg-white rounded-2xl border border-gray-200 shadow-lg animate-fade-in-down">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Select
-                  label="Категория"
-                  options={categoryOptions}
-                  value={filters.categoryId || ''}
-                  onChange={(e) => handleFilterChange('categoryId', e.target.value)}
-                />
-                <Select
-                  label="Аудитория"
-                  options={audienceOptions}
-                  value={filters.audienceId || ''}
-                  onChange={(e) => handleFilterChange('audienceId', e.target.value)}
-                />
-                <Select
-                  label="Уровень"
-                  options={difficultyOptions}
-                  value={filters.difficulty || ''}
-                  onChange={(e) =>
-                    handleFilterChange('difficulty', e.target.value as BookDifficulty)
-                  }
-                />
-                <Select
-                  label="Сортировка"
-                  options={sortOptions}
-                  value={`${filters.sortBy || 'createdAt'}-${filters.sortOrder || 'desc'}`}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
+          <SmartBookSearch
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            categories={Array.isArray(categories) ? categories : []}
+            audiences={Array.isArray(audiences) ? audiences : []}
+            totalResults={data?.totalCount || 0}
+            isLoading={isLoading}
+          />
         </div>
 
         {/* Results */}
